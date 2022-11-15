@@ -800,11 +800,20 @@ int main( int argc, char *argv[] )
     std::vector< std::string > cmdline_applist;
     std::vector< procinfo_t > inotify_proclist;
 
-    parse_cmdline( argc, argv, cmdline_applist );
-    print_separator();
+    // parse_cmdline( argc, argv, cmdline_applist );
+    // print_separator();
 
-    print_inotify_limits();
-    print_separator();
+    // print_inotify_limits();
+    // print_separator();
+
+    char hostname[ 253 ];
+    gethostname(hostname, 253);
+
+    printf("# HELP inotify_max_user_instances Maximum Number of inotify instances\n# TYPE inotify_max_user_instances gauge\n");
+    printf( "inotify_max_user_instances{hostname=\"%s\"} %u\n", hostname, get_inotify_procfs_value("max_user_instances") );
+    printf("# HELP inotify_max_user_watches Maximum Number of inotify watches\n# TYPE inotify_max_user_watches gauge\n");
+    printf( "inotify_max_user_watches{hostname=\"%s\"} %u\n", hostname, get_inotify_procfs_value("max_user_watches") );
+
 
     if ( init_inotify_proclist( inotify_proclist ) )
     {
@@ -820,31 +829,38 @@ int main( int argc, char *argv[] )
             total_instances += procinfo.instances;
         }
 
-        print_inotify_proclist( inotify_proclist );
-        print_separator();
 
-        printf( "Total inotify Watches:   %s%u%s\n", BGREEN, total_watches, RESET );
-        printf( "Total inotify Instances: %s%u%s\n", BGREEN, total_instances, RESET );
-        print_separator();
+        printf("# HELP inotify_user_watches_running The Number of Running inotify watches\n# TYPE inotify_user_watches_running gauge\n");
+        printf( "inotify_user_watches_running{hostname=\"%s\"} %u\n", hostname, total_watches );
+        printf("# HELP inotify_user_instances_running The Number of running inotify instances\n# TYPE inotify_user_instances_running gauge\n"); 
+        printf( "inotify_user_instances_running{hostname=\"%s\"} %u\n", hostname, total_instances );
 
-        double search_time = gettime();
-        uint32_t total_scanned_dirs = find_files_in_inode_set( inotify_proclist, all_found_files );
-        if ( total_scanned_dirs )
-        {
-            search_time = gettime() - search_time;
 
-            for ( const filename_info_t &fname_info : all_found_files )
-            {
-                printf( "%s%9lu%s [%u:%u] %s\n", BGREEN, fname_info.inode, RESET,
-                        major( fname_info.dev ), minor( fname_info.dev ),
-                        fname_info.filename.c_str() );
-            }
+//         print_inotify_proclist( inotify_proclist );
+//         print_separator();
 
-            setlocale( LC_NUMERIC, "" );
-GCC_DIAG_PUSH_OFF( format )
-            printf( "\n%'u dirs scanned (%.2f seconds)\n", total_scanned_dirs, search_time );
-GCC_DIAG_POP()
-        }
+//         printf( "Total inotify Watches:   %s%u%s\n", BGREEN, total_watches, RESET );
+//         printf( "Total inotify Instances: %s%u%s\n", BGREEN, total_instances, RESET );
+//         print_separator();
+
+//         double search_time = gettime();
+//         uint32_t total_scanned_dirs = find_files_in_inode_set( inotify_proclist, all_found_files );
+//         if ( total_scanned_dirs )
+//         {
+//             search_time = gettime() - search_time;
+
+//             for ( const filename_info_t &fname_info : all_found_files )
+//             {
+//                 printf( "%s%9lu%s [%u:%u] %s\n", BGREEN, fname_info.inode, RESET,
+//                         major( fname_info.dev ), minor( fname_info.dev ),
+//                         fname_info.filename.c_str() );
+//             }
+
+//             setlocale( LC_NUMERIC, "" );
+// GCC_DIAG_PUSH_OFF( format )
+//             printf( "\n%'u dirs scanned (%.2f seconds)\n", total_scanned_dirs, search_time );
+// GCC_DIAG_POP()
+//         }
     }
 
     return 0;
