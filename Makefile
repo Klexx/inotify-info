@@ -14,6 +14,8 @@
 #   scan-build -k -V --use-analyzer ~/bin/clang make
 
 NAME = inotify-info
+PREFIX = /bin
+
 
 CFG ?= release
 ifeq ($(CFG), debug)
@@ -106,7 +108,13 @@ $(ODIR)/%.o: %.cpp Makefile
 	@$(MKDIR) $(dir $@)
 	$(VERBOSE_PREFIX)$(CXX) -MMD -MP -std=c++11 $(CFLAGS) $(CXXFLAGS) -o $@ -c $<
 
-.PHONY: clean
+.PHONY: clean install uninstall
+
+install:
+	cp _release/inotify-info $(PREFIX)/$(NAME)
+
+uninstall:
+	rm  $(PREFIX)/$(NAME)
 
 clean:
 	@echo Cleaning...
